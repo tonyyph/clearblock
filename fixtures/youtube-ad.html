@@ -1,0 +1,38 @@
+<!--
+  A minimal stand-in for YouTube's watch-page DOM during an ad break.
+
+  Automated tests must never depend on YouTube serving a real ad: that is flaky by nature
+  and it would make the test suite depend on someone else's advertising inventory. This
+  fixture reproduces the class names and structure the module actually keys off.
+-->
+<div id="page-manager">
+  <div id="movie_player" class="html5-video-player playing-mode ad-showing">
+    <video id="video-element" class="html5-main-video" data-testid="video"></video>
+
+    <div class="video-ads ytp-ad-module">
+      <div class="ytp-ad-player-overlay" data-testid="player-overlay">
+        <div class="ytp-ad-skip-button-slot">
+          <button class="ytp-ad-skip-button-modern" data-testid="skip-button">Skip ad</button>
+        </div>
+      </div>
+      <div class="ytp-ad-overlay-slot" data-testid="overlay-ad">Overlay advertisement</div>
+    </div>
+
+    <div class="ytp-chrome-bottom" data-testid="controls">
+      <button class="ytp-play-button" data-testid="play-button">Play</button>
+      <button class="ytp-subtitles-button" data-testid="captions-button">Subtitles</button>
+      <button class="ytp-fullscreen-button" data-testid="fullscreen-button">Fullscreen</button>
+      <div class="ytp-progress-bar" data-testid="progress-bar"></div>
+    </div>
+  </div>
+
+  <div id="secondary">
+    <ytd-ad-slot-renderer data-testid="sidebar-ad">Sidebar ad</ytd-ad-slot-renderer>
+    <div id="player-ads" data-testid="player-ads">Companion ad</div>
+    <ytd-compact-video-renderer data-testid="related-video"
+      >A related video</ytd-compact-video-renderer
+    >
+  </div>
+
+  <div id="masthead-ad" data-testid="masthead-ad">Masthead ad</div>
+</div>

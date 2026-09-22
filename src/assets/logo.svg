@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="ClearBlock">
+  <title>ClearBlock</title>
+  <!-- Soft rounded backdrop keeps the mark readable on both light and dark toolbars. -->
+  <rect x="2" y="2" width="124" height="124" rx="28" fill="#FFF7ED"/>
+  <!-- Shield: one solid silhouette so it still reads at 16px. -->
+  <path d="M64 14 L110 31 V68 C110 95 89 112 64 118 C39 112 18 95 18 68 V31 Z" fill="#F97316"/>
+  <!-- Block symbol: thick white bar across the shield, the universal "no" mark. -->
+  <path d="M38.5 82.5 L82.5 38.5 a10 10 0 0 1 14 14 L52.5 96.5 a10 10 0 0 1 -14 -14 Z" fill="#FFFFFF"/>
+</svg>

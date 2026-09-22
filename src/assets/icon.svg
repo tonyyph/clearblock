@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="ClearBlock">
+  <title>ClearBlock</title>
+  <!-- Very light orange backdrop, per the brand palette. -->
+  <rect width="128" height="128" rx="26" fill="#FFF7ED"/>
+  <!-- Shield silhouette, filling most of the canvas so the pointed base survives at 16px. -->
+  <path d="M64 6 L116 26 V68 C116 98 92 118 64 126 C36 118 12 98 12 68 V26 Z" fill="#F97316"/>
+  <!-- Prohibition mark: a thick white bar striking clean through the shield. -->
+  <rect x="10" y="56" width="108" height="22" rx="11" transform="rotate(-42 64 67)" fill="#FFF7ED"/>
+  <rect x="16" y="59" width="96" height="16" rx="8" transform="rotate(-42 64 67)" fill="#FFFFFF"/>
+</svg>

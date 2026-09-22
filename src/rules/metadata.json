@@ -1,0 +1,20 @@
+[
+  {
+    "id": "ads",
+    "ruleCount": 70,
+    "updatedAt": "2026-09-22",
+    "description": "Ad networks, exchanges and sponsored-content widgets."
+  },
+  {
+    "id": "trackers",
+    "ruleCount": 45,
+    "updatedAt": "2026-09-22",
+    "description": "Advertising trackers, identity graphs and session-replay vendors."
+  },
+  {
+    "id": "annoyances",
+    "ruleCount": 18,
+    "updatedAt": "2026-09-22",
+    "description": "Push-notification nags, popups and email-capture overlays."
+  }
+]

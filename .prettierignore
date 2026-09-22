@@ -1,0 +1,6 @@
+dist
+node_modules
+release
+coverage
+pnpm-lock.yaml
+src/rules/*.json

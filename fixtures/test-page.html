@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ClearBlock cosmetic filtering fixture</title>
+    <style>
+      :root {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+        color: #1f2937;
+      }
+      body {
+        margin: 0;
+        padding: 24px;
+        max-width: 860px;
+        margin-inline: auto;
+        background: #fff;
+      }
+      h1 {
+        font-size: 24px;
+      }
+      h2 {
+        font-size: 17px;
+        margin-top: 32px;
+      }
+      .box {
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 14px;
+        margin: 10px 0;
+      }
+      .fake-ad {
+        background: #fee2e2;
+        border-color: #fca5a5;
+      }
+      .real-content {
+        background: #dcfce7;
+        border-color: #86efac;
+      }
+      .sticky-ad {
+        position: sticky;
+        top: 0;
+      }
+      #overlay-ad {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+      }
+      button {
+        padding: 8px 14px;
+        border-radius: 10px;
+        border: 1px solid #fed7aa;
+        background: #fff7ed;
+        color: #ea580c;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      code {
+        background: #f3f4f6;
+        border-radius: 4px;
+        padding: 1px 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>ClearBlock fixture page</h1>
+    <p>
+      Everything in a <strong>red</strong> box should disappear when ClearBlock is active.
+      Everything in a <strong>green</strong> box must stay visible — those are the false-positive
+      traps.
+    </p>
+
+    <h2>1. Ad elements that must be hidden</h2>
+    <div class="box fake-ad ad-banner" data-testid="ad-banner">.ad-banner — banner ad</div>
+    <div class="box fake-ad ad" data-testid="ad-token">.ad — whole-token class</div>
+    <div class="box fake-ad advertisement" data-testid="advertisement">.advertisement</div>
+    <div class="box fake-ad ad-slot" data-testid="ad-slot">.ad-slot</div>
+    <div class="box fake-ad sticky-ad" data-testid="sticky-ad">.sticky-ad — sticky ad</div>
+    <div class="box fake-ad" id="div-gpt-ad-1234567" data-testid="gpt-ad">
+      #div-gpt-ad-… — Google Publisher Tag slot
+    </div>
+    <div class="box fake-ad" data-ad-slot="9988776655" data-testid="data-ad-slot">
+      [data-ad-slot] — AdSense attribute
+    </div>
+    <div class="box fake-ad" aria-label="Advertisement" data-testid="aria-ad">
+      [aria-label="Advertisement"]
+    </div>
+    <ins class="adsbygoogle box fake-ad" data-testid="adsbygoogle">ins.adsbygoogle</ins>
+    <div class="box fake-ad" id="taboola-below-article" data-testid="taboola">
+      #taboola-… — sponsored content widget
+    </div>
+
+    <h2>2. Normal content that must NOT be hidden</h2>
+    <div class="box real-content header" data-testid="header">.header — contains “ad”</div>
+    <div class="box real-content shadow" data-testid="shadow">.shadow — contains “ad”</div>
+    <div class="box real-content adapter" data-testid="adapter">.adapter — starts with “ad”</div>
+    <div class="box real-content gradient" data-testid="gradient">.gradient</div>
+    <div class="box real-content download" data-testid="download">.download</div>
+    <div class="box real-content badge" data-testid="badge">.badge</div>
+    <div class="box real-content adaptive-layout" data-testid="adaptive">.adaptive-layout</div>
+    <div class="box real-content" id="broadcast" data-testid="broadcast">#broadcast</div>
+    <div class="box real-content" id="add-to-cart" data-testid="add-to-cart">#add-to-cart</div>
+    <div class="box real-content readable" data-testid="readable">.readable</div>
+
+    <h2>3. Dynamically inserted content</h2>
+    <p>
+      Click the button to insert one more ad and one more normal element. A correct implementation
+      hides only the new ad, via the live stylesheet and the
+      <code>MutationObserver</code>.
+    </p>
+    <button id="inject" type="button">Insert dynamic elements</button>
+    <div id="dynamic-host"></div>
+
+    <h2>4. Overlay ad</h2>
+    <button id="show-overlay" type="button">Show overlay ad</button>
+
+    <h2>5. Article content</h2>
+    <article class="box real-content">
+      <p>
+        This paragraph represents the actual page content. It must remain readable and correctly
+        laid out with ClearBlock enabled — no layout shift, no missing text.
+      </p>
+    </article>
+
+    <script>
+      let counter = 0;
+      document.getElementById('inject').addEventListener('click', () => {
+        counter += 1;
+        const host = document.getElementById('dynamic-host');
+
+        const ad = document.createElement('div');
+        ad.className = 'box fake-ad ad-container';
+        ad.dataset.testid = `dynamic-ad-${counter}`;
+        ad.textContent = `.ad-container — inserted dynamically (#${counter})`;
+        host.appendChild(ad);
+
+        const content = document.createElement('div');
+        content.className = 'box real-content headline';
+        content.dataset.testid = `dynamic-content-${counter}`;
+        content.textContent = `.headline — inserted dynamically (#${counter})`;
+        host.appendChild(content);
+      });
+
+      document.getElementById('show-overlay').addEventListener('click', () => {
+        if (document.getElementById('overlay-ad')) return;
+        // Overlay ads usually lock scrolling; ClearBlock releases the lock after hiding one.
+        document.body.style.overflow = 'hidden';
+        const overlay = document.createElement('div');
+        overlay.id = 'overlay-ad';
+        overlay.className = 'ad';
+        overlay.dataset.testid = 'overlay-ad';
+        overlay.textContent = 'Full-screen overlay ad';
+        document.body.appendChild(overlay);
+      });
+    </script>
+  </body>
+</html>
