@@ -4,3 +4,9 @@ release
 coverage
 pnpm-lock.yaml
 src/rules/*.json
+src/ui/icon-artwork.ts
+
+# Editor/tooling files that are not part of the extension source.
+.vscode
+logs
+.gauge

@@ -6,6 +6,17 @@
  * Emoji are never used as icons.
  */
 import type { JSX, SVGProps } from 'react';
+import {
+  ARTWORK_TO_ICON_SCALE,
+  MARK,
+  MARK_COLOR,
+  SHIELD_DARK,
+  SHIELD_LIGHT,
+  SHIELD_PATH,
+  SHIELD_RIGHT_PATH,
+  GLYPH_STROKE,
+  STRIKE_LINE,
+} from './icon-artwork';
 
 export type IconName =
   | 'shield'
@@ -28,12 +39,23 @@ export type IconName =
   | 'external';
 
 const PATHS: Record<IconName, JSX.Element> = {
-  shield: <path d="M12 3 20 6.2v5.6c0 4.4-3.3 7.6-8 9.2-4.7-1.6-8-4.8-8-9.2V6.2L12 3Z" />,
+  // The two shield glyphs are the brand silhouette itself, scaled from the 512 artwork box
+  // onto the 24-unit icon grid, so the status badge matches the toolbar icon exactly.
+  shield: (
+    <g transform={`scale(${ARTWORK_TO_ICON_SCALE})`}>
+      <path d={SHIELD_PATH} />
+    </g>
+  ),
   'shield-off': (
-    <>
-      <path d="M12 3 20 6.2v5.6c0 4.4-3.3 7.6-8 9.2-4.7-1.6-8-4.8-8-9.2V6.2L12 3Z" />
-      <path d="M4 4.5 20 20" strokeWidth="2.2" />
-    </>
+    <g
+      transform={`scale(${ARTWORK_TO_ICON_SCALE})`}
+      strokeWidth={GLYPH_STROKE}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d={SHIELD_PATH} />
+      <path d={STRIKE_LINE} />
+    </g>
   ),
   pause: (
     <>
@@ -138,23 +160,23 @@ export function Icon({ name, size = 18, title, ...rest }: IconProps): JSX.Elemen
   );
 }
 
-/** The ClearBlock wordmark lockup — shield glyph plus name. */
+/** The ClearBlock mark: the same artwork the packaged PNG icons are generated from. */
 export function Logo({ size = 24 }: { size?: number }): JSX.Element {
   return (
-    <svg width={size} height={size} viewBox="0 0 128 128" aria-hidden="true" focusable="false">
-      <path
-        d="M64 6 L116 26 V68 C116 98 92 118 64 126 C36 118 12 98 12 68 V26 Z"
-        fill="currentColor"
-      />
-      <rect
-        x="10"
-        y="57"
-        width="108"
-        height="20"
-        rx="10"
-        transform="rotate(-42 64 67)"
-        fill="var(--color-background)"
-      />
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 512 512"
+      aria-hidden="true"
+      focusable="false"
+      role="presentation"
+    >
+      <path d={SHIELD_PATH} fill={SHIELD_LIGHT} />
+      <path d={SHIELD_RIGHT_PATH} fill={SHIELD_DARK} />
+      <g stroke={MARK_COLOR} fill="none">
+        <circle cx={MARK.cx} cy={MARK.cy} r={MARK.radius} strokeWidth={MARK.ringStroke} />
+        <path d={`M${MARK.x1} ${MARK.y1} L${MARK.x2} ${MARK.y2}`} strokeWidth={MARK.slashStroke} />
+      </g>
     </svg>
   );
 }

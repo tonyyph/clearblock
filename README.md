@@ -21,14 +21,15 @@ own, and never sends anything about your browsing anywhere.
 8. [Load the extension in Chrome](#load-the-extension-in-chrome)
 9. [Testing](#testing)
 10. [Adding filter rules](#adding-filter-rules)
-11. [Managing the allowlist](#managing-the-allowlist)
-12. [Permissions and why each one is needed](#permissions-and-why-each-one-is-needed)
-13. [Privacy](#privacy)
-14. [How blocked counts are measured](#how-blocked-counts-are-measured)
-15. [YouTube: what works and what cannot](#youtube-what-works-and-what-cannot)
-16. [Manifest V3 limitations](#manifest-v3-limitations)
-17. [Packaging for the Chrome Web Store](#packaging-for-the-chrome-web-store)
-18. [Release checklist](#release-checklist)
+11. [The icon](#the-icon)
+12. [Managing the allowlist](#managing-the-allowlist)
+13. [Permissions and why each one is needed](#permissions-and-why-each-one-is-needed)
+14. [Privacy](#privacy)
+15. [How blocked counts are measured](#how-blocked-counts-are-measured)
+16. [YouTube: what works and what cannot](#youtube-what-works-and-what-cannot)
+17. [Manifest V3 limitations](#manifest-v3-limitations)
+18. [Packaging for the Chrome Web Store](#packaging-for-the-chrome-web-store)
+19. [Release checklist](#release-checklist)
 
 ---
 
@@ -90,7 +91,8 @@ clearblock/
 │   └── youtube-ad.html         Stand-in for YouTube's ad DOM, used by the unit tests
 ├── scripts/
 │   ├── generate-rules.mjs      Curated domain lists -> DNR rulesets + metadata
-│   ├── generate-icons.mjs      SVG -> PNG icon set (sharp)
+│   ├── icon-artwork.mjs        The mark's geometry — single source of truth
+│   ├── generate-icons.mjs      Artwork -> icon.svg, logo.svg, PNG set, UI constants
 │   ├── build-static.mjs        Copies manifest + rules into dist, syncs the version
 │   ├── validate-rules.mjs      Schema, unique IDs, over-broad rule detection
 │   ├── validate-manifest.mjs   Built-output audit: files, banned APIs, unused permissions
@@ -113,11 +115,15 @@ clearblock/
     │       ├── youtube-selectors.ts    All YouTube selectors, in one place
     │       ├── youtube-observer.ts     Bounded, batched MutationObserver
     │       └── youtube-navigation.ts   SPA navigation tracking
+    ├── assets/
+    │   ├── icon-source.png         Supplied reference artwork (kept for provenance)
+    │   └── icon.svg / logo.svg     Generated vector mark — do not hand-edit
     ├── popup/                      Popup UI, components and hooks
     ├── options/                    Dashboard UI and panels
     ├── rules/                      Generated DNR rulesets + metadata.json
     ├── shared/                     types, constants, storage, domain, messaging, logger
     ├── ui/                         Primitives shared by popup and options
+    │   └── icon-artwork.ts         Generated mark geometry used by the React UI
     └── styles/                     Design tokens and shared component styles
 ```
 
@@ -147,7 +153,7 @@ pnpm lint        # ESLint
 pnpm format      # Prettier --write
 pnpm test        # Vitest unit + component tests
 pnpm rules       # Regenerate src/rules/*.json from the curated domain lists
-pnpm icons       # Regenerate public/icons/*.png from src/assets/icon.svg
+pnpm icons       # Regenerate every icon asset from scripts/icon-artwork.mjs
 ```
 
 ## Production build
@@ -245,6 +251,34 @@ Cosmetic selectors live in `src/content/selectors.ts` (generic + domain-specific
 `src/content/youtube/youtube-selectors.ts`. The hard rule: **never substring-match a class
 or id**. CSS class selectors are token-exact, which is why `.ad` is safe while
 `[class*="ad"]` is not.
+
+## The icon
+
+Every icon asset comes from one definition, `scripts/icon-artwork.mjs`:
+
+```bash
+pnpm icons
+```
+
+That regenerates, in order:
+
+| Output                                       | Used by                                                                                              |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `src/assets/icon.svg`, `src/assets/logo.svg` | docs, store listing (generated — do not hand-edit)                                                   |
+| `public/icons/icon-{16,32,48,128}.png`       | the manifest's `icons` and `action.default_icon`                                                     |
+| `src/ui/icon-artwork.ts`                     | the React `Logo` and the shield glyphs, so the on-screen mark can never drift from the packaged PNGs |
+
+The mark is a vector trace of `src/assets/icon-source.png`, the supplied reference artwork,
+which is kept in the repo. The geometry — shield bounding box, the fold down the centre, and
+the prohibition ring's centre, radius, stroke width and 45-degree slash — was measured from
+that file's pixels and matches it to within about one pixel at 256px. Rendering from vector
+rather than downsampling the 1254px source keeps the 16px and 32px icons crisp and drops the
+reference's drop shadow, which only becomes a muddy halo at toolbar sizes.
+
+The 16px PNG gets one deliberate optical adjustment: a thinner, slightly larger ring, because
+at that size the ring's counter otherwise fills in and the "prohibited" reading is lost. The
+silhouette and colours are identical at every size. Colours are the brand pair,
+`#F97316` and `#EA580C`, which is also what the reference image samples to.
 
 ## Managing the allowlist
 
