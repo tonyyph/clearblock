@@ -117,6 +117,14 @@ export function Popup(): JSX.Element {
           </p>
         ) : null}
 
+        {contentState && contentState.youtubeAdsNeutralised > 0 ? (
+          <p className="popup__footnote">
+            {contentState.youtubeAdsNeutralised} YouTube ad slot
+            {contentState.youtubeAdsNeutralised === 1 ? '' : 's'} removed before the player could
+            schedule them.
+          </p>
+        ) : null}
+
         {contentState && contentState.hiddenElements > 0 ? (
           <p className="popup__footnote">
             {contentState.hiddenElements} ad element

@@ -1,5 +1,5 @@
 /** Identifiers of the static declarativeNetRequest rulesets shipped with the extension. */
-export type RulesetId = 'ads' | 'trackers' | 'annoyances';
+export type RulesetId = 'ads' | 'trackers' | 'annoyances' | 'regional-vi';
 
 export type ThemePreference = 'light' | 'dark' | 'system';
 
@@ -9,6 +9,8 @@ export type ExtensionSettings = {
   youtubeProtectionEnabled: boolean;
   trackerBlockingEnabled: boolean;
   annoyanceBlockingEnabled: boolean;
+  /** Regional list (ABPVN). Small, and the only thing that covers Vietnamese ad servers. */
+  regionalBlockingEnabled: boolean;
   /** Opt-in: use declarativeNetRequestFeedback for continuous (non-sampled) counting. */
   accurateCountingEnabled: boolean;
   theme: ThemePreference;
@@ -37,9 +39,13 @@ export type RulesetInfo = {
   id: RulesetId;
   enabled: boolean;
   ruleCount: number;
-  /** ISO date the bundled list was last edited (baked in at build time). */
+  /** ISO date the list was compiled into the extension (baked in at build time). */
   updatedAt: string;
   description: string;
+  /** Upstream list this ruleset was compiled from — an attribution licence condition. */
+  source: string;
+  homepage: string;
+  license: string;
 };
 
 export type SiteStatus = {
@@ -77,6 +83,8 @@ export type ContentState = {
   active: boolean;
   hiddenElements: number;
   youtubeActive: boolean;
+  /** Ad-scheduling fields the MAIN-world pruner removed from YouTube player responses. */
+  youtubeAdsNeutralised: number;
 };
 
 export type MessageResponse<T> = { ok: true; data: T } | { ok: false; error: string };

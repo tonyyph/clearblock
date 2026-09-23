@@ -7,7 +7,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "node scripts/dev.mjs",
-    "build": "npm run clean && npm run build:app && npm run build:content && npm run build:static",
+    "build": "npm run clean && npm run build:app && npm run build:content && npm run build:mainworld && npm run build:static",
     "build:app": "vite build",
     "build:content": "vite build --config vite.content.config.ts",
     "build:static": "node scripts/build-static.mjs",
@@ -27,7 +27,14 @@
     "zip": "node scripts/package-zip.mjs",
     "verify": "npm run typecheck && npm run lint && npm run test && npm run build && npm run validate",
     "release": "npm run verify && npm run zip",
-    "rules": "node scripts/generate-rules.mjs"
+    "screenshots": "node scripts/make-store-screenshots.mjs",
+    "promo": "node scripts/make-promo-tiles.mjs",
+    "store:assets": "npm run screenshots && npm run promo",
+    "store": "npm run build && npm run zip && npm run store:assets && node scripts/build-store-folder.mjs",
+    "filters:fetch": "node scripts/fetch-filters.mjs",
+    "filters:compile": "node scripts/compile-filters.mjs",
+    "filters": "npm run filters:fetch && npm run filters:compile && npm run validate:rules",
+    "build:mainworld": "vite build --config vite.mainworld.config.ts"
   },
   "dependencies": {
     "react": "19.3.0",

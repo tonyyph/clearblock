@@ -86,7 +86,7 @@ export function GeneralPanel({
       <SettingRow
         id="setting-youtube"
         title="YouTube protection"
-        description="Hides ad surfaces on YouTube and presses Skip when the real button appears. In-stream ads without a Skip button still play."
+        description="Removes the ad schedule from YouTube's player response before the player reads it, so in-stream video ads are never scheduled. Also hides feed, sidebar and overlay ads. YouTube changes this from time to time; if playback misbehaves, switch it off here."
         checked={settings.youtubeProtectionEnabled}
         onChange={(next) => onChange({ youtubeProtectionEnabled: next })}
         disabled={saving || !settings.enabled}

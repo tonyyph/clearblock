@@ -9,6 +9,15 @@ const RULESET_CONTROL: Record<RulesetId, keyof ExtensionSettings | null> = {
   ads: null,
   trackers: 'trackerBlockingEnabled',
   annoyances: 'annoyanceBlockingEnabled',
+  'regional-vi': 'regionalBlockingEnabled',
+};
+
+/** Human-readable names; the ruleset ids are identifiers, not labels. */
+const RULESET_LABEL: Record<RulesetId, string> = {
+  ads: 'Ads',
+  trackers: 'Trackers',
+  annoyances: 'Annoyances',
+  'regional-vi': 'Vietnamese sites',
 };
 
 export function FiltersPanel({
@@ -71,11 +80,23 @@ export function FiltersPanel({
             return (
               <li key={ruleset.id} className="ruleset">
                 <div className="ruleset__text">
-                  <p className="ruleset__name">{ruleset.id}</p>
+                  <p className="ruleset__name">{RULESET_LABEL[ruleset.id]}</p>
                   <p className="ruleset__description">{ruleset.description}</p>
                   <p className="ruleset__meta">
-                    {ruleset.ruleCount.toLocaleString()} rules · updated {ruleset.updatedAt} ·{' '}
+                    {ruleset.ruleCount.toLocaleString()} rules · compiled {ruleset.updatedAt} ·{' '}
                     {ruleset.enabled ? 'loaded' : 'not loaded'}
+                  </p>
+                  {/* Crediting the upstream list is a condition of its licence. */}
+                  <p className="ruleset__meta">
+                    Source:{' '}
+                    {ruleset.homepage ? (
+                      <a href={ruleset.homepage} target="_blank" rel="noreferrer noopener">
+                        {ruleset.source}
+                      </a>
+                    ) : (
+                      ruleset.source
+                    )}{' '}
+                    · {ruleset.license}
                   </p>
                 </div>
                 <Toggle

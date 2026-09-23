@@ -1,20 +1,38 @@
 [
   {
     "id": "ads",
-    "ruleCount": 70,
-    "updatedAt": "2026-09-22",
-    "description": "Ad networks, exchanges and sponsored-content widgets."
+    "ruleCount": 17738,
+    "updatedAt": "2026-09-23",
+    "description": "The primary community ad-blocking list.",
+    "source": "EasyList",
+    "homepage": "https://easylist.to/",
+    "license": "GPLv3 / CC BY-SA 3.0"
   },
   {
     "id": "trackers",
-    "ruleCount": 45,
-    "updatedAt": "2026-09-22",
-    "description": "Advertising trackers, identity graphs and session-replay vendors."
+    "ruleCount": 10872,
+    "updatedAt": "2026-09-23",
+    "description": "Tracking and telemetry endpoints.",
+    "source": "EasyPrivacy",
+    "homepage": "https://easylist.to/",
+    "license": "GPLv3 / CC BY-SA 3.0"
   },
   {
     "id": "annoyances",
     "ruleCount": 18,
-    "updatedAt": "2026-09-22",
-    "description": "Push-notification nags, popups and email-capture overlays."
+    "updatedAt": "2026-09-23",
+    "description": "Push-notification nags, popups and email-capture overlays.",
+    "source": "ClearBlock curated",
+    "homepage": "",
+    "license": "MIT"
+  },
+  {
+    "id": "regional-vi",
+    "ruleCount": 371,
+    "updatedAt": "2026-09-23",
+    "description": "Vietnamese sites, maintained by the ABPVN project.",
+    "source": "ABPVN",
+    "homepage": "https://abpvn.com/",
+    "license": "CC BY-SA 3.0"
   }
 ]

@@ -20,31 +20,33 @@ own, and never sends anything about your browsing anywhere.
 7. [Production build](#production-build)
 8. [Load the extension in Chrome](#load-the-extension-in-chrome)
 9. [Testing](#testing)
-10. [Adding filter rules](#adding-filter-rules)
+10. [Filter lists](#filter-lists)
 11. [The icon](#the-icon)
 12. [Managing the allowlist](#managing-the-allowlist)
 13. [Permissions and why each one is needed](#permissions-and-why-each-one-is-needed)
 14. [Privacy](#privacy)
 15. [How blocked counts are measured](#how-blocked-counts-are-measured)
-16. [YouTube: what works and what cannot](#youtube-what-works-and-what-cannot)
+16. [YouTube: how the video ads are blocked](#youtube-how-the-video-ads-are-blocked)
 17. [Manifest V3 limitations](#manifest-v3-limitations)
 18. [Packaging for the Chrome Web Store](#packaging-for-the-chrome-web-store)
-19. [Release checklist](#release-checklist)
+19. [Store submission folder](#store-submission-folder)
+20. [Release checklist](#release-checklist)
 
 ---
 
 ## Features
 
-- **Network blocking** — 133 bundled `declarativeNetRequest` rules across three lists:
-  ad networks and exchanges (70), advertising trackers and identity graphs (45), and
-  push/popup annoyances (18). Chrome applies the rules itself, so the extension never
-  observes the requests.
+- **Network blocking** — 28,999 bundled `declarativeNetRequest` rules compiled from the
+  community filter lists: EasyList (17,738), EasyPrivacy (10,872), ABPVN for Vietnamese
+  sites (371) and ClearBlock's own annoyance list (18). Chrome applies the rules itself, so
+  the extension never observes the requests.
 - **Cosmetic filtering** — a single injected stylesheet hides ad slots, banners, sticky
   ads, overlays and sponsored containers at `document_start`, before first paint. No
   substring class matching, so `header`, `shadow`, `adapter` and friends are safe.
-- **YouTube module** — hides feed, sidebar, masthead and in-player overlay ads, and presses
-  the real **Skip** button when it appears. See
-  [the limitations](#youtube-what-works-and-what-cannot) before you expect more.
+- **YouTube module** — removes the ad schedule from YouTube's player response in the page's
+  own JavaScript world, so in-stream video ads are never scheduled; also hides feed,
+  sidebar, masthead and overlay ads and presses a real **Skip** button if one appears.
+  See [how it works and what it cannot promise](#youtube-how-the-video-ads-are-blocked).
 - **Per-site control** — pause or resume protection for the site you are on, straight from
   the popup. Allowlist entries cover subdomains.
 - **Blocked-request counts** — per tab and lifetime, honestly labelled as sampled or
@@ -56,16 +58,23 @@ own, and never sends anything about your browsing anywhere.
 
 ## Screenshots
 
-> Placeholders — replace before submitting to the Web Store. The recommended sizes are
-> 1280×800 or 640×400.
+Generated from the built extension with `npm run screenshots` — every pixel of UI is a real
+capture, not a mock-up. They live in `docs/screenshots/` at the 1280x800 the Chrome Web Store
+requires.
 
-| View                        | Image                                                    |
-| --------------------------- | -------------------------------------------------------- |
-| Popup — protection active   | `docs/screenshots/popup-active.png` _(placeholder)_      |
-| Popup — paused on this site | `docs/screenshots/popup-paused.png` _(placeholder)_      |
-| Dashboard — General         | `docs/screenshots/options-general.png` _(placeholder)_   |
-| Dashboard — Allowlist       | `docs/screenshots/options-allowlist.png` _(placeholder)_ |
-| Dashboard — Privacy         | `docs/screenshots/options-privacy.png` _(placeholder)_   |
+| View                                             | File                                        |
+| ------------------------------------------------ | ------------------------------------------- |
+| Popup, protection active, over an article        | `docs/screenshots/store-1-popup-active.png` |
+| The same page with and without ClearBlock        | `docs/screenshots/store-2-before-after.png` |
+| Popup paused on the site, with the reload prompt | `docs/screenshots/store-3-popup-paused.png` |
+| Dashboard — protection switches                  | `docs/screenshots/store-4-dashboard.png`    |
+| Dashboard — privacy and permissions              | `docs/screenshots/store-5-privacy.png`      |
+| Dashboard — allowlist                            | `docs/screenshots/store-6-allowlist.png`    |
+
+The page underneath is `fixtures/demo-article.html`, a fictional publication: a listing image
+should not carry a real newspaper's masthead, and a fixture makes the before/after an exact
+like-for-like comparison. It also embeds genuine ad-network tags, so it exercises network
+blocking as well as cosmetic filtering.
 
 ## Tech stack
 
@@ -88,9 +97,17 @@ clearblock/
 ├── public/icons/               Generated PNG icons (16/32/48/128)
 ├── fixtures/
 │   ├── test-page.html          Cosmetic filtering demo + false-positive traps
+│   ├── demo-article.html       Fictional publication used for the store screenshots
 │   └── youtube-ad.html         Stand-in for YouTube's ad DOM, used by the unit tests
+├── store/
+│   ├── DESCRIPTION.txt         Listing description (tracked, copied into the store folder)
+│   └── PASTE-INTO-DASHBOARD.template.md  Filled in at build time with version + counts
 ├── scripts/
 │   ├── generate-rules.mjs      Curated domain lists -> DNR rulesets + metadata
+│   ├── fetch-filters.mjs       Downloads the upstream lists (build time only)
+│   ├── compile-filters.mjs     Adblock Plus syntax -> DNR rulesets + cosmetic table
+│   ├── lib/abp-parser.mjs      The converter, with its own unit tests
+│   ├── lib/curated-filters.mjs ClearBlock's own vetted domain lists
 │   ├── icon-artwork.mjs        The mark's geometry — single source of truth
 │   ├── generate-icons.mjs      Artwork -> icon.svg, logo.svg, PNG set, UI constants
 │   ├── build-static.mjs        Copies manifest + rules into dist, syncs the version
@@ -221,33 +238,77 @@ so the demo page and the tests cannot drift apart.
 a test that waits for one is a test that fails for unrelated reasons. `fixtures/youtube-ad.html`
 reproduces the ad DOM instead.
 
-## Adding filter rules
+## Filter lists
 
-Network rules are generated, not hand-edited:
+Network rules are **compiled from the community filter lists**, not hand-written:
 
-1. Add the domain to the right list in `scripts/generate-rules.mjs`
-   (`AD_DOMAINS`, `TRACKER_DOMAINS`, `ANNOYANCE_DOMAINS`), or add a precise URL rule to
-   `TRACKER_URL_RULES` when a domain also serves non-advertising functionality.
-2. Run `pnpm rules` — this rewrites `src/rules/*.json` and `src/rules/metadata.json`.
-3. Run `pnpm validate:rules`.
+```bash
+npm run filters          # fetch + compile + validate
+npm run filters:fetch    # download the lists into filters/ (build time only)
+npm run filters:compile  # Adblock Plus syntax -> declarativeNetRequest
+```
 
-Conventions the generator and validator enforce:
+This matters more than it sounds. A hand-curated list of "known ad companies" cannot block
+real advertising: the networks rotate, and regional sites buy from private ad servers that
+no generic list will ever name. The community lists do name them.
 
-- ID ranges are fixed per list: ads `1000–1999`, trackers `2000–2999`, annoyances
-  `3000–3999`. Dynamic allowlist rules start at `100000`, so the two spaces cannot collide.
-- Every rule has a unique `id`, a `priority`, an `action` and a `condition`.
-- `requestDomains` is preferred over `urlFilter`: it matches the domain and its subdomains,
-  and it is both faster and harder to get wrong.
-- **Block rules never target `main_frame`.** Blocking a top-level navigation replaces a page
-  the user deliberately clicked with a Chrome error page.
-- A rule with neither `requestDomains` nor a specific `urlFilter` is rejected as too broad.
-- General analytics (Google Analytics, Plausible, …) is **not** blocked. That is not ad
-  blocking, and blanket-blocking it breaks sites. Use custom cosmetic filters or your own
-  rules if you want more.
-- Consent-management platforms are **not** blocked either: blocking a CMP usually leaves a
-  half-rendered banner and can stop a site loading entirely.
+| Ruleset       | Source                    | Rules  |
+| ------------- | ------------------------- | ------ |
+| `ads`         | EasyList                  | 17,738 |
+| `trackers`    | EasyPrivacy               | 10,872 |
+| `regional-vi` | ABPVN (Vietnamese sites)  | 371    |
+| `annoyances`  | ClearBlock's curated list | 18     |
 
-Cosmetic selectors live in `src/content/selectors.ts` (generic + domain-specific) and
+The lists are downloaded **at build time only** and are git-ignored; what ships is the
+compiled output. The extension makes no network request of its own, which is both a Chrome
+Web Store requirement and why ClearBlock works offline. Attribution and licence terms for
+the bundled data are in [NOTICE.md](./NOTICE.md).
+
+### The 30,000-rule ceiling
+
+Chrome guarantees an extension only 30,000 _enabled_ static rules. The lists convert to
+about 112,000, so roughly three quarters have to be left out. `scripts/compile-filters.mjs`
+therefore ranks rules by blocking power per slot rather than truncating in file order:
+
+1. exception rules — dropping one turns a working site into a broken one;
+2. whole-domain blocks (`||adserver.example^`) — the broadest rule there is;
+3. rules scoped to named sites via `$domain=`;
+4. loose path and substring patterns.
+
+Regional lists are small and disproportionately useful, so `regional-vi` and `annoyances`
+are reserved in full and never trimmed.
+
+### What the converter refuses to convert
+
+Filters that DNR cannot express are counted and dropped, never approximated — a wrong rule
+breaks a site, while a missing rule merely fails to block one thing. `npm run filters:compile`
+prints the tally. The main categories are `$redirect` / `$csp` / `$removeparam` rewriting,
+regex filters (DNR uses RE2 and would reject many of them), `$popup` on its own (DNR cannot
+cancel a `window.open`; the popunder _script_ gets blocked instead), and anything blocking a
+top-level navigation, which would replace a page the user clicked with a Chrome error.
+
+### Adding your own rules
+
+Edit the curated lists in `scripts/lib/curated-filters.mjs` — they are merged into the
+compiled rulesets first, so they survive trimming — then run `npm run filters:compile` and
+`npm run validate:rules`.
+
+Conventions the compiler and validator enforce:
+
+- IDs are allocated per ruleset in millions (`ads` 1,000,000+, `trackers` 2,000,000+,
+  `annoyances` 3,000,000+, `regional-vi` 4,000,000+). Dynamic allowlist rules sit at
+  100,000, so the two spaces cannot collide.
+- **Block rules never target `main_frame`.**
+- `requestDomains` is preferred over `urlFilter`: faster, and harder to get wrong.
+- A `urlFilter` beginning with `||` must be followed by a hostname. `||*.example.com/x` is
+  legal Adblock Plus but malformed for DNR, and Chrome does not reject it — **it hangs
+  while indexing and never finishes starting**. One such rule among 29,000 was enough to
+  stop Chrome launching at all. The compiler normalises it and the validator rejects it.
+- General analytics and consent-management platforms are not in ClearBlock's own curated
+  lists. The upstream lists make their own call, which is why EasyPrivacy blocks Google
+  Analytics.
+
+Cosmetic selectors live in `src/content/selectors.ts` and
 `src/content/youtube/youtube-selectors.ts`. The hard rule: **never substring-match a class
 or id**. CSS class selectors are token-exact, which is why `.ad` is safe while
 `[class*="ad"]` is not.
@@ -308,8 +369,8 @@ Behaviour:
 | `<all_urls>` (host permission)                 | **Why an ad blocker needs it:** ads and trackers can appear on any site, and there is no way to know in advance which. The host permission is what lets the filter rules and the cosmetic stylesheet apply wherever you browse. ClearBlock uses this access for nothing else — it reads no page content, and sends nothing anywhere. |
 | `declarativeNetRequestFeedback` (**optional**) | Requested only if you turn on _Continuous counting_ in the dashboard, and revoked when you turn it off. It lets Chrome report which rules matched so totals can be exact.                                                                                                                                                            |
 
-ClearBlock does **not** request `tabs`, `webNavigation`, `scripting`, `cookies`, `history`
-or `management`. `scripts/validate-manifest.mjs` fails the build if a declared permission is
+ClearBlock does **not** request `tabs`, `webNavigation`, `cookies`, `history` or
+`management`. `scripts/validate-manifest.mjs` fails the build if a declared permission is
 not actually used anywhere in `src/`.
 
 ## Privacy
@@ -354,40 +415,74 @@ tabs, and pruned hourly.
 The toolbar badge shows a count only in continuous mode; in sampled mode it shows nothing
 rather than a stale number, and it shows `off` when protection is paused for that tab.
 
-## YouTube: what works and what cannot
+## YouTube: how the video ads are blocked
 
-**ClearBlock does not block 100% of YouTube ads, and nothing built on Manifest V3 can
-honestly claim to.**
+ClearBlock blocks YouTube's in-stream video ads. It does it the same way uBlock Origin,
+uBlock Origin Lite and AdBlock do, and it is worth understanding the mechanism because the
+obvious approach genuinely does not work.
 
-What the module does:
+### Why a network rule cannot do it
 
-- Hides ad surfaces outside the player: feed ads, sidebar ads, masthead ads, promoted
-  shelves, and the empty layout boxes they leave behind.
-- Hides overlay ads drawn on top of the video.
-- Presses the real **Skip** button once it exists, is visible and is enabled — with an
-  800 ms cooldown, a cap of 3 presses per ad break and a hard ceiling of 20 per minute, so a
-  click loop is impossible.
-- Tracks SPA navigation (`yt-navigate-finish`, `yt-page-data-updated`, `popstate`,
-  `hashchange`) with no polling, and re-points its observer at the new player.
+The media segments for an ad and the media segments for the video both come from
+`googlevideo.com`, frequently through the same manifest. There is no URL-level signal that
+separates them, so a blocking rule that catches the ad also catches the video.
 
-What it deliberately does **not** do:
+### What does work: removing the schedule, not the media
 
-- No change to playback rate, no muting, no seeking.
-- No tampering with, decoding or rewriting YouTube's media streams.
-- No Premium spoofing.
-- Nothing that touches playback controls, fullscreen, captions, the miniplayer, playlists,
-  Shorts or live streams.
+YouTube's player does not decide on its own when to show an ad. It reads a **player
+response** object, and the ad breaks are listed in four fields on it:
 
-Why in-stream ads still play:
+```text
+adPlacements   playerAds   adSlots   adBreakHeartbeatParams
+```
 
-- YouTube serves in-stream ad segments from the **same endpoints and often the same
-  manifests** as the video itself. A network rule that blocked them would block the video.
-- Ads without a Skip button cannot be skipped — there is nothing legitimate to press.
-- YouTube changes its DOM frequently. When a selector stops matching, the module does
-  nothing and logs at debug level in development builds; it never throws into the page.
+Delete those before the player reads them and there is no ad break to play. The media is
+untouched; the schedule simply no longer contains any ads.
 
-If YouTube protection ever interferes with playback, turn it off in the dashboard or pause
-ClearBlock for `youtube.com` and please open an issue.
+That object reaches the player by two routes, and both are covered:
+
+1. **inline**, assigned to `window.ytInitialPlayerResponse` by a script in the watch page —
+   intercepted with a property setter installed at `document_start`;
+2. **as JSON** from `youtubei/v1/player` on every in-page navigation after that —
+   intercepted by hooking `JSON.parse` and `Response.prototype.json`.
+
+### Why this needs a MAIN-world content script
+
+An ordinary content script runs in an isolated world and cannot see, let alone patch,
+`window.ytInitialPlayerResponse` or the page's `JSON.parse`. Manifest V3 supports
+`"world": "MAIN"` for exactly this, and `src/content/youtube/ad-pruner.ts` is registered
+that way — dynamically, by the service worker, so that the YouTube toggle and the per-site
+pause genuinely unregister it instead of leaving it running.
+
+The pruner touches nothing else. `streamingData`, `playabilityStatus`, `videoDetails`,
+`captions` and `playerConfig` are all left exactly as they arrived; the unit tests in
+`tests/youtube-pruner.test.ts` assert this, because removing any of them would break
+playback rather than advertising.
+
+### The rest of the YouTube module
+
+- Hides feed, sidebar, masthead and in-player overlay ads, and collapses the gaps they leave.
+- Presses the real **Skip** button when one appears — with an 800 ms cooldown, three presses
+  per break and a hard ceiling of twenty per minute, so a click loop is impossible.
+- Follows YouTube's single-page navigation without polling.
+- Never changes playback rate, mutes, seeks, tampers with media streams, spoofs Premium, or
+  interferes with playback controls, fullscreen, captions, the miniplayer, playlists, Shorts
+  or live streams.
+
+### What this does not guarantee
+
+This is an arms race, and honesty about that matters more than a marketing claim:
+
+- **YouTube changes these shapes.** When a field is renamed or moved, ads return until the
+  pruner is updated. That is true of every blocker, including the big ones.
+- **Server-side ad insertion would defeat it.** If YouTube ever stitches ads into the media
+  stream itself, the schedule disappears as a separate thing to remove and no extension —
+  this one or any other — can help.
+- **YouTube may detect it.** Anti-adblock prompts are a moving target and ClearBlock does
+  not attempt to defeat them.
+
+If YouTube playback ever misbehaves, turn YouTube protection off in the dashboard or pause
+ClearBlock for `youtube.com`, and please open an issue.
 
 ## Manifest V3 limitations
 
@@ -406,7 +501,7 @@ Things that are simply not possible under MV3, and how ClearBlock handles them:
 ### Things ClearBlock does not promise
 
 - 100% of ads on every site. No blocker achieves that, and anti-adblock systems change daily.
-- 100% of YouTube ads — see above.
+- That YouTube ad blocking keeps working forever — see above.
 - Blocking first-party ads served from the site's own domain, which are indistinguishable
   from site content at the network layer. Cosmetic filtering catches some of these.
 - Anti-adblock circumvention.
@@ -425,6 +520,42 @@ directory when it loads one; the packaging script removes and excludes it).
 
 To bump the version, edit `version` in `package.json`; `scripts/build-static.mjs` writes it
 into the manifest at build time, so the two cannot disagree.
+
+## Store submission folder
+
+```bash
+npm run store
+```
+
+That runs the whole chain — build, zip, screenshots, promo tiles — and assembles
+**`../clearblock-store/`**, ready to upload:
+
+```text
+clearblock-store/
+├── clearblock-1.0.0-chrome.zip     the file you upload
+├── unpacked-chrome/                the same build, unzipped, for "Load unpacked"
+├── PASTE-INTO-DASHBOARD.md         every dashboard field, ready to paste
+├── DESCRIPTION.txt                 the listing description on its own
+├── PRIVACY.md                      publish this somewhere and link it in the dashboard
+├── CHROME_WEB_STORE_CHECKLIST.md   the pre-submission checklist
+├── store-icon-128.png              128x128
+├── promo-small-440x280.png         the listing tile
+├── promo-marquee-1400x560.png      only used if Google features the extension
+└── screenshots/                    six 1280x800 captures
+```
+
+The assembler verifies the exact pixel dimensions of every image and the character counts of
+the listing text before it writes anything, because the dashboard only rejects a wrong-sized
+asset after you have filled in the entire form. It also deletes the `_metadata/` directory
+Chrome writes into an unpacked extension folder, which must never reach a reviewer.
+
+The individual steps can be run on their own:
+
+```bash
+npm run screenshots   # captures and composes the six store images
+npm run promo         # renders both promo tiles
+node scripts/build-store-folder.mjs [target-dir]
+```
 
 ## Release checklist
 

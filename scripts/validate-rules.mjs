@@ -96,31 +96,73 @@ for (const file of files) {
       return;
     }
 
-    if (!Array.isArray(condition.resourceTypes) || condition.resourceTypes.length === 0) {
-      errors.push(`${at}: condition.resourceTypes must be a non-empty array`);
-    } else {
-      for (const type of condition.resourceTypes) {
-        if (!VALID_RESOURCE_TYPES.has(type)) {
-          errors.push(`${at}: unsupported resourceType "${type}"`);
+    // resourceTypes may be omitted: DNR then matches every type except main_frame, which
+    // is exactly the safe default for a converted Adblock Plus filter that named no type.
+    if (condition.resourceTypes !== undefined) {
+      if (!Array.isArray(condition.resourceTypes) || condition.resourceTypes.length === 0) {
+        errors.push(`${at}: condition.resourceTypes, when present, must be a non-empty array`);
+      } else {
+        for (const type of condition.resourceTypes) {
+          if (!VALID_RESOURCE_TYPES.has(type)) {
+            errors.push(`${at}: unsupported resourceType "${type}"`);
+          }
+        }
+        if (rule.action?.type === 'block' && condition.resourceTypes.includes('main_frame')) {
+          errors.push(`${at}: block rules must not target main_frame (it breaks navigation)`);
         }
       }
-      if (rule.action?.type === 'block' && condition.resourceTypes.includes('main_frame')) {
-        errors.push(`${at}: block rules must not target main_frame (it breaks navigation)`);
+    }
+    if (Array.isArray(condition.excludedResourceTypes)) {
+      for (const type of condition.excludedResourceTypes) {
+        if (!VALID_RESOURCE_TYPES.has(type)) {
+          errors.push(`${at}: unsupported excludedResourceType "${type}"`);
+        }
+      }
+    }
+    if (rule.action?.type === 'allowAllRequests') {
+      const types = condition.resourceTypes ?? [];
+      if (!types.includes('main_frame') && !types.includes('sub_frame')) {
+        errors.push(`${at}: allowAllRequests requires main_frame or sub_frame`);
       }
     }
 
-    const hasDomain =
-      Array.isArray(condition.requestDomains) && condition.requestDomains.length > 0;
-    const hasFilter =
-      typeof condition.urlFilter === 'string' && condition.urlFilter.replace(/\*/g, '').length >= 4;
+    // `||` is DNR's domain anchor and must be followed by a hostname. Chrome does not
+    // reject a malformed one — it hangs indexing the ruleset and the browser never starts,
+    // so this check is the difference between a failed build and a bricked browser.
+    if (typeof condition.urlFilter === 'string') {
+      const filter = condition.urlFilter;
+      if (filter.startsWith('||') && !/^\|\|[a-z0-9]/i.test(filter)) {
+        errors.push(`${at}: malformed domain anchor in urlFilter "${filter}"`);
+      }
+      if (/[^|]\|(?!$)/.test(filter.slice(2))) {
+        errors.push(`${at}: "|" may only appear at the start or end of a urlFilter`);
+      }
 
-    if (!hasDomain && !hasFilter) {
-      errors.push(`${at}: rule is too broad — needs requestDomains or a specific urlFilter`);
+      if (!/^[\x20-\x7E]*$/.test(filter)) {
+        errors.push(`${at}: urlFilter must be ASCII`);
+      }
     }
 
-    if (hasDomain) {
+    // A rule is acceptably scoped if it names the request's domain, names the sites it
+    // applies to, or carries a URL pattern with real substance. A wildcard urlFilter is
+    // fine when `initiatorDomains` confines it to named sites.
+    const hasRequestDomain =
+      Array.isArray(condition.requestDomains) && condition.requestDomains.length > 0;
+    const hasInitiatorDomain =
+      Array.isArray(condition.initiatorDomains) && condition.initiatorDomains.length > 0;
+    const hasFilter =
+      typeof condition.urlFilter === 'string' && condition.urlFilter.replace(/\*/g, '').length >= 4;
+    const hasRegex = typeof condition.regexFilter === 'string';
+
+    if (!hasRequestDomain && !hasInitiatorDomain && !hasFilter && !hasRegex) {
+      errors.push(
+        `${at}: rule is too broad — needs requestDomains, initiatorDomains or a specific urlFilter`,
+      );
+    }
+
+    if (hasRequestDomain) {
       for (const domain of condition.requestDomains) {
-        if (typeof domain !== 'string' || !/^[a-z0-9.-]+\.[a-z]{2,}$/.test(domain)) {
+        if (typeof domain !== 'string' || !/^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(domain)) {
           errors.push(`${at}: invalid requestDomain "${domain}"`);
         }
       }
@@ -149,11 +191,30 @@ try {
   errors.push(`metadata.json: ${error.message}`);
 }
 
+const total = Object.values(counts).reduce((sum, n) => sum + n, 0);
+
 if (errors.length > 0) {
   console.error(`\nRule validation failed (${errors.length} problem(s)):`);
-  for (const error of errors) console.error(`  - ${error}`);
+  // Group by message shape so one systematic mistake does not print 28,000 lines.
+  const byKind = new Map();
+  for (const error of errors) {
+    const kind = error.replace(/\[\d+\]/, '[]').replace(/"[^"]*"/g, '"…"');
+    const list = byKind.get(kind) ?? [];
+    list.push(error);
+    byKind.set(kind, list);
+  }
+  for (const [kind, list] of byKind) {
+    console.error(`  - ${kind}  (${list.length}x)`);
+    for (const example of list.slice(0, 3)) console.error(`      e.g. ${example}`);
+  }
   process.exit(1);
 }
 
-const total = Object.values(counts).reduce((sum, n) => sum + n, 0);
+if (total > 30000) {
+  console.error(
+    `\nRule validation failed: ${total} rules exceeds Chrome's 30,000 enabled static rule limit.`,
+  );
+  process.exit(1);
+}
+
 console.log(`rules: OK — ${files.length} ruleset(s), ${total} rules, all IDs unique and in range.`);

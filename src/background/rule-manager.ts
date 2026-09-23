@@ -17,6 +17,9 @@ type RulesetMetadata = {
   ruleCount: number;
   updatedAt: string;
   description: string;
+  source: string;
+  homepage: string;
+  license: string;
 };
 
 const METADATA = rulesetMetadata as RulesetMetadata[];
@@ -27,6 +30,7 @@ export function desiredRulesets(settings: ExtensionSettings): RulesetId[] {
   const active: RulesetId[] = ['ads'];
   if (settings.trackerBlockingEnabled) active.push('trackers');
   if (settings.annoyanceBlockingEnabled) active.push('annoyances');
+  if (settings.regionalBlockingEnabled) active.push('regional-vi');
   return active;
 }
 
@@ -70,13 +74,7 @@ export async function syncRulesets(settings: ExtensionSettings): Promise<Ruleset
 
 export async function getRulesetInfo(): Promise<RulesetInfo[]> {
   const enabled = new Set(await getEnabledRulesets());
-  return METADATA.map((entry) => ({
-    id: entry.id,
-    enabled: enabled.has(entry.id),
-    ruleCount: entry.ruleCount,
-    updatedAt: entry.updatedAt,
-    description: entry.description,
-  }));
+  return METADATA.map((entry) => ({ ...entry, enabled: enabled.has(entry.id) }));
 }
 
 export function getBundledRuleCount(): number {

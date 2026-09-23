@@ -1,17 +1,17 @@
 /**
- * YouTube protection.
+ * YouTube protection — the isolated-world half.
  *
- * Scope and honesty
- * -----------------
- * Under Manifest V3 this module can do exactly three things, and it does only these:
+ * The in-stream video ads are handled elsewhere, by `ad-pruner.ts`, which the service
+ * worker registers as a MAIN-world content script so it can strip the ad schedule out of
+ * YouTube's player response before the player reads it. That is the part that stops video
+ * ads; this file is everything around it:
+ *
  *   1. hide ad surfaces outside the player (feed, sidebar, masthead) with CSS;
  *   2. hide overlay ads drawn on top of the video with CSS;
- *   3. press the real "Skip" button once it exists, is visible and is enabled.
+ *   3. press the real "Skip" button if one still appears, once it is visible and enabled.
  *
  * It does NOT, and will not: touch playback rate, mute or seek the video, tamper with
- * YouTube's media streams, spoof Premium, or block the ad request itself (in-stream ads
- * are served from the same endpoints as the video). Pre-roll ads that have no Skip button
- * still play. README.md states this limitation in the same words.
+ * YouTube's media streams, or spoof Premium.
  *
  * Everything below fails soft: a selector that no longer matches simply does nothing.
  */

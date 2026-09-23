@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>What a Standard Page Weighs — The Morning Ledger</title>
+    <style>
+      /*
+        A fictional publication used only for store screenshots and manual testing.
+        It is deliberately not a real site: a listing image should not carry someone
+        else's masthead, articles or trademarks. The ad slots use the same class and id
+        conventions real ad stacks use, so what the screenshots show is genuine
+        cosmetic filtering, not a mock-up.
+      */
+      :root {
+        --ink: #0f172a;
+        --muted: #64748b;
+        --line: #e2e8f0;
+        --accent: #1d4ed8;
+        --paper: #ffffff;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: #f8fafc;
+        color: var(--ink);
+        font:
+          16px/1.65 -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          Roboto,
+          Arial,
+          sans-serif;
+      }
+      .header {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        background: var(--paper);
+        border-bottom: 1px solid var(--line);
+      }
+      .header__inner {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 14px 24px;
+        display: flex;
+        align-items: center;
+        gap: 28px;
+      }
+      .masthead {
+        font-family: Georgia, 'Times New Roman', serif;
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: -0.3px;
+      }
+      .nav {
+        display: flex;
+        gap: 20px;
+        font-size: 14px;
+        color: var(--muted);
+      }
+      .nav a {
+        color: inherit;
+        text-decoration: none;
+      }
+      .nav a:hover {
+        color: var(--ink);
+      }
+      .header .badge {
+        margin-left: auto;
+        font-size: 12px;
+        font-weight: 600;
+        background: #eff6ff;
+        color: var(--accent);
+        border: 1px solid #bfdbfe;
+        border-radius: 999px;
+        padding: 4px 10px;
+      }
+
+      .wrap {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 0 24px 80px;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 300px;
+        gap: 40px;
+      }
+
+      article h1 {
+        font-family: Georgia, 'Times New Roman', serif;
+        font-size: 42px;
+        line-height: 1.12;
+        letter-spacing: -0.8px;
+        margin: 28px 0 12px;
+      }
+      .byline {
+        color: var(--muted);
+        font-size: 14px;
+        margin-bottom: 26px;
+      }
+      article p {
+        margin: 0 0 18px;
+      }
+      article .lede {
+        font-size: 19px;
+        color: #1e293b;
+      }
+      figure {
+        margin: 28px 0;
+      }
+      .figure__box {
+        height: 220px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%);
+        border: 1px solid #c7d2fe;
+      }
+      figcaption {
+        color: var(--muted);
+        font-size: 13px;
+        margin-top: 8px;
+      }
+      .download {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 9px 14px;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--accent);
+        background: var(--paper);
+        text-decoration: none;
+      }
+
+      aside h2 {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+        margin: 28px 0 12px;
+      }
+      .readlist {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      .readlist li {
+        padding: 12px 0;
+        border-bottom: 1px solid var(--line);
+        font-size: 15px;
+      }
+      .readlist li:last-child {
+        border-bottom: none;
+      }
+
+      /* --- Ad surfaces. Standard class/id conventions, nothing exotic. --- */
+      .adlabel {
+        font-size: 10px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: #94a3b8;
+        text-align: center;
+        margin-bottom: 6px;
+      }
+      .adbox {
+        background: #eef2f7;
+        border: 1px dashed #cbd5e1;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #94a3b8;
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .ad-banner {
+        margin: 18px 0 4px;
+      }
+      .ad-banner .adbox {
+        height: 92px;
+      }
+      .ad-slot .adbox {
+        height: 250px;
+      }
+      #div-gpt-ad-inarticle {
+        margin: 26px 0;
+      }
+      #div-gpt-ad-inarticle .adbox {
+        height: 132px;
+      }
+      .sponsored .adbox {
+        height: 110px;
+      }
+      .sticky-ad {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 30;
+        background: #e2e8f0;
+        border-top: 1px solid #cbd5e1;
+        padding: 12px 24px;
+        text-align: center;
+        color: #64748b;
+        font-size: 13px;
+        font-weight: 600;
+      }
+      /* Narrow viewports stack the sidebar, which is also what the portrait
+         store-screenshot panels are captured at. */
+      @media (max-width: 1023px) {
+        .layout {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 8px;
+        }
+        .wrap {
+          padding: 0 20px 80px;
+        }
+        article h1 {
+          font-size: 32px;
+          margin-top: 20px;
+        }
+        .nav {
+          display: none;
+        }
+      }
+      footer {
+        border-top: 1px solid var(--line);
+        background: var(--paper);
+        color: var(--muted);
+        font-size: 13px;
+      }
+      footer div {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 22px 24px;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="header">
+      <div class="header__inner">
+        <span class="masthead">The Morning Ledger</span>
+        <nav class="nav">
+          <a href="#">Business</a><a href="#">Science</a><a href="#">Culture</a
+          ><a href="#">Opinion</a>
+        </nav>
+        <span class="badge">Subscriber</span>
+      </div>
+    </header>
+
+    <div class="wrap">
+      <!-- Leaderboard -->
+      <div class="ad-banner">
+        <p class="adlabel">Advertisement</p>
+        <div class="adbox">728 × 90 leaderboard</div>
+      </div>
+
+      <div class="layout">
+        <article>
+          <h1>What a standard page actually weighs</h1>
+          <p class="byline">By A. Reviewer · 22 September 2026 · 7 min read</p>
+
+          <p class="lede">
+            The average article page now ships more bytes of advertising and measurement code than
+            it does words. Most of it arrives before the first paragraph has finished rendering.
+          </p>
+
+          <p>
+            Open the network panel on almost any publication and the shape is the same. A handful of
+            requests fetch the text, the images and the stylesheet. Several dozen more fetch bidding
+            scripts, identity syncs and measurement pixels, each one negotiating on your behalf in
+            an auction you were never shown.
+          </p>
+
+          <figure>
+            <div class="figure__box"></div>
+            <figcaption>
+              Requests on a typical article page, grouped by what they are for.
+            </figcaption>
+          </figure>
+
+          <!-- In-article slot -->
+          <div id="div-gpt-ad-inarticle">
+            <p class="adlabel">Advertisement</p>
+            <div class="adbox">300 × 250 in-article</div>
+          </div>
+
+          <p>
+            None of this is a secret, and none of it is especially controversial among the people
+            who build it. What is striking is how much of the weight is spent on the auction rather
+            than on the advertisement that eventually wins it.
+          </p>
+
+          <p>
+            The practical consequence is felt on slow connections and older hardware, where the text
+            you came for waits behind code that exists to describe you to a bidder.
+          </p>
+
+          <p><a class="download" href="#">Download the full dataset (CSV)</a></p>
+
+          <p>
+            A reasonable response is not to demand that publishing be free, but to insist that the
+            reader's device is not the cheapest place to put the machinery.
+          </p>
+        </article>
+
+        <aside>
+          <!-- Sidebar MPU -->
+          <div class="ad-slot">
+            <p class="adlabel">Advertisement</p>
+            <div class="adbox">300 × 250</div>
+          </div>
+
+          <h2>Most read</h2>
+          <ul class="readlist">
+            <li>The quiet economics of the print run</li>
+            <li>Why timetables are still written by hand</li>
+            <li>A short history of the shipping pallet</li>
+            <li>The last factory that still makes carbon paper</li>
+          </ul>
+
+          <!-- Sponsored card -->
+          <div class="sponsored" data-ad-slot="4417281930">
+            <p class="adlabel">Sponsored</p>
+            <div class="adbox">Promoted content</div>
+          </div>
+
+          <h2>Newsletter</h2>
+          <p style="font-size: 14px; color: var(--muted); margin-top: 0">
+            One email each weekday morning. No tracking pixels.
+          </p>
+        </aside>
+      </div>
+    </div>
+
+    <footer>
+      <div>© 2026 The Morning Ledger · A fictional publication used for testing</div>
+    </footer>
+
+    <!-- Sticky bottom ad -->
+    <div class="sticky-ad">Advertisement — 970 × 90 sticky footer</div>
+
+    <!--
+      Real ad-network subresources, so this page exercises network blocking as well as
+      cosmetic filtering. With ClearBlock active these never leave the browser: Chrome
+      matches them against the bundled declarativeNetRequest rules and cancels them.
+      They are deliberately the standard tags a publisher would actually embed.
+    -->
+    <img
+      src="https://securepubads.g.doubleclick.net/pagead/1x1.gif"
+      width="1"
+      height="1"
+      alt=""
+      style="position: absolute; left: -9999px"
+    />
+    <img
+      src="https://www.googletagservices.com/tag/js/gpt.js"
+      width="1"
+      height="1"
+      alt=""
+      style="position: absolute; left: -9999px"
+    />
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+    <script async src="https://cdn.taboola.com/libtrc/unip/loader.js"></script>
+  </body>
+</html>

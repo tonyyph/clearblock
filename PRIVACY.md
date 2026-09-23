@@ -69,6 +69,12 @@ stylesheet that hides ad elements, and — on YouTube — watch for ad surfaces 
 button. It does not read page text, form fields, credentials or cookies, and it has no way
 to send anything off the device.
 
+On YouTube only, a second bundled script runs in the page's own JavaScript world. Its sole
+job is to delete four ad-scheduling fields from YouTube's player response before the player
+reads them, which is what stops in-stream video ads. It reads nothing else, stores nothing,
+and cannot make a network request of its own — it has no access to any extension API. Its
+source is `src/content/youtube/ad-pruner.ts`, about a hundred lines.
+
 ## Children's privacy
 
 ClearBlock collects no data from anyone, including children under 13.
@@ -87,4 +93,4 @@ prompt.
 ## Contact
 
 Questions or concerns: open an issue at
-<https://github.com/clearblock/clearblock/issues>.
+<https://github.com/tonyyph/clearblock/issues>.

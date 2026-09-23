@@ -1,16 +1,11 @@
 /**
- * Generates the static declarativeNetRequest rulesets from curated domain lists.
+ * ClearBlock's own curated domain lists.
  *
- * Keeping the source lists here (rather than hand-editing JSON) guarantees unique,
- * stable, per-ruleset rule IDs and a consistent condition shape. Run `npm run rules`
- * after editing a list, then `npm run validate:rules`.
+ * These predate the upstream lists and are kept for two reasons: they are vetted by hand,
+ * and they guarantee coverage of a core set of ad and tracker domains regardless of what
+ * the community lists happen to contain on any given day. `compile-filters.mjs` merges
+ * them into the compiled rulesets.
  */
-import { writeFileSync } from 'node:fs';
-import { resolve, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-
 /**
  * Every resource type except `main_frame`. Blocking a top-level navigation would replace
  * the page a user explicitly clicked with a Chrome error page, which is worse than an ad.
@@ -102,6 +97,13 @@ const AD_DOMAINS = [
   'zemanta.com',
   'googlesyndication.com',
   'googleadservices.com',
+  // Legacy Google Publisher Tag host. Still served, still pure ad tech — not to be
+  // confused with googletagmanager.com, which is deliberately left alone below.
+  'googletagservices.com',
+  'serving-sys.com',
+  'flashtalking.com',
+  'creativecdn.com',
+  'dotomi.com',
 ];
 
 /**
@@ -191,51 +193,20 @@ const ANNOYANCE_DOMAINS = [
   'exitintel.com',
 ];
 
-const RULESETS = [
-  {
-    id: 'ads',
-    idBase: 1000,
-    description: 'Ad networks, exchanges and sponsored-content widgets.',
-    domains: AD_DOMAINS,
-    urlRules: [],
-  },
-  {
-    id: 'trackers',
-    idBase: 2000,
-    description: 'Advertising trackers, identity graphs and session-replay vendors.',
-    domains: TRACKER_DOMAINS,
-    urlRules: TRACKER_URL_RULES,
-  },
-  {
-    id: 'annoyances',
-    idBase: 3000,
-    description: 'Push-notification nags, popups and email-capture overlays.',
-    domains: ANNOYANCE_DOMAINS,
-    urlRules: [],
-  },
-];
+export { SUBRESOURCE_TYPES, AD_DOMAINS, TRACKER_DOMAINS, TRACKER_URL_RULES, ANNOYANCE_DOMAINS };
 
-function buildRules(ruleset) {
+/** Builds DNR rule bodies (no `id`) for a curated domain list. */
+export function curatedRules(domains, urlRules = []) {
   const rules = [];
-  let nextId = ruleset.idBase;
-
-  for (const domain of [...new Set(ruleset.domains)].sort()) {
+  for (const domain of [...new Set(domains)].sort()) {
     rules.push({
-      id: nextId++,
       priority: 1,
       action: { type: 'block' },
-      condition: {
-        // `requestDomains` matches the domain and all of its subdomains, which is both
-        // faster and far less error-prone than an equivalent urlFilter wildcard.
-        requestDomains: [domain],
-        resourceTypes: SUBRESOURCE_TYPES,
-      },
+      condition: { requestDomains: [domain], resourceTypes: SUBRESOURCE_TYPES },
     });
   }
-
-  for (const rule of ruleset.urlRules) {
+  for (const rule of urlRules) {
     rules.push({
-      id: nextId++,
       priority: 1,
       action: { type: 'block' },
       condition: {
@@ -244,32 +215,5 @@ function buildRules(ruleset) {
       },
     });
   }
-
-  if (nextId > ruleset.idBase + 999) {
-    throw new Error(`Ruleset "${ruleset.id}" overflowed its 1000-ID block`);
-  }
   return rules;
 }
-
-const metadata = [];
-const today = new Date().toISOString().slice(0, 10);
-
-for (const ruleset of RULESETS) {
-  const rules = buildRules(ruleset);
-  const target = resolve(root, 'src/rules', `${ruleset.id}.json`);
-  writeFileSync(target, `${JSON.stringify(rules, null, 2)}\n`, 'utf8');
-  metadata.push({
-    id: ruleset.id,
-    ruleCount: rules.length,
-    updatedAt: today,
-    description: ruleset.description,
-  });
-  console.log(`rules: ${ruleset.id} -> ${rules.length} rules`);
-}
-
-writeFileSync(
-  resolve(root, 'src/rules/metadata.json'),
-  `${JSON.stringify(metadata, null, 2)}\n`,
-  'utf8',
-);
-console.log('rules: wrote src/rules/metadata.json');

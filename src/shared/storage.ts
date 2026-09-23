@@ -110,6 +110,10 @@ export function validateSettings(value: unknown): ExtensionSettings {
       raw.annoyanceBlockingEnabled,
       DEFAULT_SETTINGS.annoyanceBlockingEnabled,
     ),
+    regionalBlockingEnabled: asBoolean(
+      raw.regionalBlockingEnabled,
+      DEFAULT_SETTINGS.regionalBlockingEnabled,
+    ),
     accurateCountingEnabled: asBoolean(
       raw.accurateCountingEnabled,
       DEFAULT_SETTINGS.accurateCountingEnabled,

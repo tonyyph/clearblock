@@ -48,6 +48,17 @@ function topLevelHostname(): string {
 const pageHostname = topLevelHostname();
 const frameHostname = location.hostname;
 
+/**
+ * The MAIN-world pruner cannot talk to chrome.*, so it announces its work with a DOM event
+ * that this isolated-world script picks up. The popup therefore reports a number ClearBlock
+ * actually measured rather than an estimate.
+ */
+let youtubeAdsNeutralised = 0;
+document.addEventListener('clearblock:youtube-pruned', (event) => {
+  const detail = (event as CustomEvent<{ count?: number }>).detail;
+  if (typeof detail?.count === 'number') youtubeAdsNeutralised = detail.count;
+});
+
 function shouldRunCosmetic(settings: ExtensionSettings): boolean {
   if (!settings.enabled || !settings.cosmeticFilteringEnabled) return false;
   return !isAllowlisted(pageHostname, settings.allowlistedDomains);
@@ -82,6 +93,7 @@ function buildState(): ContentState {
     active: isCosmeticFilteringActive() || isYouTubeProtectionActive(),
     hiddenElements: cosmeticHiddenCount(),
     youtubeActive: isYouTubeProtectionActive(),
+    youtubeAdsNeutralised,
   };
 }
 

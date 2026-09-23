@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Options } from '../src/options/Options';
+import rulesetMetadata from '../src/rules/metadata.json';
 import { installMessageRouter } from './helpers/message-router';
 
 async function openTab(name: RegExp): Promise<void> {
@@ -124,15 +125,19 @@ describe('Options — Allowlist', () => {
 });
 
 describe('Options — Filters', () => {
-  it('lists every bundled ruleset with its rule count', async () => {
+  it('lists every bundled ruleset with its real rule count', async () => {
     installMessageRouter();
     render(<Options />);
     await openTab(/filters/i);
 
-    expect(await screen.findByText('ads')).toBeInTheDocument();
-    expect(screen.getByText(/70 rules/)).toBeInTheDocument();
-    expect(screen.getByText(/45 rules/)).toBeInTheDocument();
-    expect(screen.getByText(/18 rules/)).toBeInTheDocument();
+    expect(await screen.findByText('Ads')).toBeInTheDocument();
+    expect(screen.getByText('Vietnamese sites')).toBeInTheDocument();
+    for (const entry of rulesetMetadata) {
+      expect(entry.ruleCount).toBeGreaterThan(0);
+      // The panel formats counts with thousands separators.
+      const formatted = entry.ruleCount.toLocaleString('en-US');
+      expect(screen.getByText(new RegExp(`${formatted} rules`))).toBeInTheDocument();
+    }
   });
 
   it('rejects a custom selector that is not a selector', async () => {

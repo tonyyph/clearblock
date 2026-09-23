@@ -1,4 +1,5 @@
 import { vi } from 'vitest';
+import rulesetMetadata from '../../src/rules/metadata.json';
 import { DEFAULT_SETTINGS } from '../../src/shared/constants';
 import type { ExtensionMessage, ExtensionSettings, SiteStatus } from '../../src/shared/types';
 
@@ -54,33 +55,11 @@ export function installMessageRouter(options: RouterOptions = {}) {
         return { ok: true, data: statistics };
       case 'GET_RULESET_INFO':
       case 'REFRESH_FILTERS':
+        // Sourced from the generated metadata so this fixture cannot go stale when the
+        // bundled filter lists change.
         return {
           ok: true,
-          data: {
-            rulesets: [
-              {
-                id: 'ads',
-                enabled: true,
-                ruleCount: 70,
-                updatedAt: '2026-09-22',
-                description: 'Ad networks.',
-              },
-              {
-                id: 'trackers',
-                enabled: true,
-                ruleCount: 45,
-                updatedAt: '2026-09-22',
-                description: 'Trackers.',
-              },
-              {
-                id: 'annoyances',
-                enabled: true,
-                ruleCount: 18,
-                updatedAt: '2026-09-22',
-                description: 'Annoyances.',
-              },
-            ],
-          },
+          data: { rulesets: rulesetMetadata.map((entry) => ({ ...entry, enabled: true })) },
         };
       case 'OPEN_OPTIONS':
         return { ok: true, data: { opened: true } };

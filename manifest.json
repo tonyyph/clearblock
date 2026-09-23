@@ -25,7 +25,7 @@
     "service_worker": "service-worker.js",
     "type": "module"
   },
-  "permissions": ["storage", "activeTab", "declarativeNetRequest", "alarms"],
+  "permissions": ["storage", "activeTab", "declarativeNetRequest", "alarms", "scripting"],
   "optional_permissions": ["declarativeNetRequestFeedback"],
   "host_permissions": ["<all_urls>"],
   "content_scripts": [
@@ -52,6 +52,11 @@
         "id": "annoyances",
         "enabled": true,
         "path": "rules/annoyances.json"
+      },
+      {
+        "id": "regional-vi",
+        "enabled": true,
+        "path": "rules/regional-vi.json"
       }
     ]
   }

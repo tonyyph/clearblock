@@ -24,6 +24,7 @@ import type {
   SiteStatus,
 } from '../shared/types';
 import { syncAllowlistRules, toggleDomain } from './allowlist-manager';
+import { syncYouTubeInjection } from './mainworld-manager';
 import { getRulesetInfo, syncRulesets } from './rule-manager';
 import {
   forgetTab,
@@ -46,6 +47,7 @@ function ensureReady(): Promise<ExtensionSettings> {
       const settings = await readSettings();
       await syncRulesets(settings);
       await syncAllowlistRules(settings.allowlistedDomains);
+      await syncYouTubeInjection(settings);
       await syncAlarms(settings);
       return settings;
     })().catch((error) => {
@@ -135,6 +137,7 @@ async function handleMessage(message: ExtensionMessage): Promise<MessageResponse
       );
       const next = await writeSettings({ ...current, allowlistedDomains });
       await syncAllowlistRules(next.allowlistedDomains);
+      await syncYouTubeInjection(next);
       return ok({
         hostname: message.hostname,
         enabled: message.enabled,
@@ -165,6 +168,7 @@ async function handleMessage(message: ExtensionMessage): Promise<MessageResponse
       const next = await patchSettings(message.payload);
       await syncRulesets(next);
       await syncAllowlistRules(next.allowlistedDomains);
+      await syncYouTubeInjection(next);
       await syncAlarms(next);
       return ok(next);
     }
@@ -284,6 +288,7 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
     // Diff-based, so a settings write from any context converges without a write loop.
     await syncRulesets(settings);
     await syncAllowlistRules(settings.allowlistedDomains);
+    await syncYouTubeInjection(settings);
     await syncAlarms(settings);
     const tab = await getActiveTab();
     if (tab?.id !== undefined) await refreshBadgeForTab(tab.id, settings);

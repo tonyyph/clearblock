@@ -1,0 +1,87 @@
+Block ads and ad trackers — without handing your browsing to anyone.
+
+ClearBlock filters through Chrome's own declarativeNetRequest engine, so the matching happens inside the browser. The extension is never told which URLs you request; under Manifest V3 it cannot be. There is no account, no server, and no network request of its own.
+
+
+━━━ WHAT IT BLOCKS ━━━
+
+• 28,999 blocking rules compiled from the community filter lists — EasyList, EasyPrivacy
+  and ABPVN for Vietnamese sites — plus ClearBlock's own curated annoyance list
+• Ad networks, exchanges, ad servers and the private ad servers regional sites use
+• Advertising trackers, identity graphs and session-replay vendors
+• Push-notification nags, popups and email-capture overlays
+• Ad slots, banners, sticky ads and overlays that survive network blocking — hidden before the page paints, so there is no flash of an ad and no layout shift
+
+Filter lists are compiled into the extension when it is built. Nothing is downloaded at runtime, no remote code is ever loaded, and ClearBlock works with no connection at all. Chrome allows an extension 30,000 active rules, so the lists are trimmed to the highest-value rules that fit — whole-domain blocks and exception rules first.
+
+EasyList and EasyPrivacy are licensed GPLv3 / CC BY-SA 3.0; ABPVN is CC BY-SA 3.0. Each list is credited inside the extension under Dashboard → Filters.
+
+
+━━━ WHAT IT DELIBERATELY DOES NOT BLOCK ━━━
+
+An ad blocker that breaks sites gets uninstalled. ClearBlock leaves alone:
+
+• Cookie-consent platforms — blocking one usually leaves a half-drawn banner and can stop a site loading
+• Top-level navigation — a link you clicked should never turn into a Chrome error page
+• Anything the converter cannot express exactly: a rule that is guessed at breaks sites, so it is dropped instead
+
+Cosmetic filtering never substring-matches a class name, which is where most false positives come from. "header", "shadow", "adapter", "download" and "badge" are safe.
+
+
+━━━ PER-SITE CONTROL ━━━
+
+• Pause on the site you are on, from the popup, in one click
+• Allowlist entries cover subdomains: example.com also covers shop.example.com
+• Invalid input is rejected with a message rather than quietly saved
+• Changes apply immediately, and ClearBlock offers you a reload instead of reloading your tab behind your back
+
+
+━━━ YOUTUBE ━━━
+
+ClearBlock blocks YouTube's in-stream video ads, using the same mechanism the established blockers use.
+
+A network rule cannot do it: the ad and the video are delivered from the same servers, so blocking one blocks the other. What ClearBlock removes instead is the schedule. YouTube's player reads a "player response" object that lists where the ad breaks go; ClearBlock deletes those fields before the player sees them, and the media itself is never touched.
+
+It also:
+• Hides feed, sidebar, masthead and in-player overlay ads, and collapses the gaps they leave
+• Presses the real "Skip" button when one appears, with a cooldown so it can never loop
+• Follows YouTube's single-page navigation without polling
+
+It never changes playback speed, mutes or seeks your video, tampers with YouTube's media streams, spoofs Premium, or interferes with playback controls, fullscreen, captions, the miniplayer, playlists, Shorts or live streams.
+
+Being straight about the limits: this is an arms race. YouTube changes the shape of that object from time to time, and when it does, ads come back until the extension is updated — that is true of every blocker. If YouTube ever splices ads into the video stream itself, no extension can help.
+
+
+━━━ ABOUT THE BLOCKED COUNTER ━━━
+
+Manifest V3 removed the API that let extensions watch requests, and it provides no "a request was blocked" event. The only supported source is getMatchedRules(), which Chrome retains for roughly five minutes and, without an extra permission, reports only for the tab you are actively using.
+
+So ClearBlock has two modes and always tells you which one produced a number:
+
+• Sampled (default) — real measurements, taken when you open the popup. Marked "est.", because totals under-count.
+• Continuous (optional) — grant one extra permission in the dashboard and the total becomes exact.
+
+Numbers are never invented. If ClearBlock did not observe it, it does not count it.
+
+
+━━━ ABOUT THE PERMISSION WARNING ━━━
+
+Chrome will tell you ClearBlock can "read and change all your data on all websites". That deserves a straight explanation.
+
+Ads and trackers can appear on any website, and there is no way to know in advance which ones will, so an ad blocker has to be able to apply its rules wherever you browse. No narrower set of hosts would work.
+
+ClearBlock uses that access for exactly two things: handing filter rules to Chrome, and hiding ad elements locally on the page. It reads no page content, keeps no history, and makes no network request of its own. It does not request tabs, webNavigation, scripting, cookies, history or management.
+
+
+━━━ PRIVACY ━━━
+
+No account. No analytics. No telemetry. No tracking. Nothing leaves your device — not a URL, not a page, not an identifier. Your settings and your allowlist live in chrome.storage.local on this machine and are deliberately never synced.
+
+Full policy: https://github.com/tonyyph/clearblock/blob/main/PRIVACY.md
+
+
+━━━ GOOD TO KNOW ━━━
+
+Browser pages (chrome://), the Chrome Web Store and other extensions' pages are protected by Chrome and cannot be filtered by any extension. ClearBlock says so in the popup rather than showing a toggle that would do nothing.
+
+ClearBlock is an independent project. It is not affiliated with, endorsed by, or connected to Google LLC or YouTube.

@@ -1,0 +1,26 @@
+[
+  {
+    "id": "easylist",
+    "name": "EasyList",
+    "url": "https://easylist.to/easylist/easylist.txt",
+    "homepage": "https://easylist.to/",
+    "license": "GPLv3 / CC BY-SA 3.0",
+    "description": "The primary community ad-blocking list."
+  },
+  {
+    "id": "easyprivacy",
+    "name": "EasyPrivacy",
+    "url": "https://easylist.to/easylist/easyprivacy.txt",
+    "homepage": "https://easylist.to/",
+    "license": "GPLv3 / CC BY-SA 3.0",
+    "description": "Tracking and telemetry endpoints."
+  },
+  {
+    "id": "abpvn",
+    "name": "ABPVN",
+    "url": "https://easylist-downloads.adblockplus.org/abpvn.txt",
+    "homepage": "https://abpvn.com/",
+    "license": "CC BY-SA 3.0",
+    "description": "Vietnamese sites, maintained by the ABPVN project."
+  }
+]

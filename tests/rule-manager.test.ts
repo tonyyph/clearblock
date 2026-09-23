@@ -5,7 +5,12 @@ import metadata from '../src/rules/metadata.json';
 
 describe('desiredRulesets', () => {
   it('enables every list when everything is on', () => {
-    expect(desiredRulesets(DEFAULT_SETTINGS)).toEqual(['ads', 'trackers', 'annoyances']);
+    expect(desiredRulesets(DEFAULT_SETTINGS)).toEqual([
+      'ads',
+      'trackers',
+      'annoyances',
+      'regional-vi',
+    ]);
   });
 
   it('keeps ads as the baseline and drops the optional lists', () => {
@@ -14,6 +19,7 @@ describe('desiredRulesets', () => {
         ...DEFAULT_SETTINGS,
         trackerBlockingEnabled: false,
         annoyanceBlockingEnabled: false,
+        regionalBlockingEnabled: false,
       }),
     ).toEqual(['ads']);
   });
@@ -32,13 +38,18 @@ describe('syncRulesets', () => {
     await syncRulesets({ ...DEFAULT_SETTINGS, trackerBlockingEnabled: false });
 
     expect(update).toHaveBeenCalledWith({
-      enableRulesetIds: ['annoyances'],
+      enableRulesetIds: ['annoyances', 'regional-vi'],
       disableRulesetIds: ['trackers'],
     });
   });
 
   it('does not call Chrome when nothing changed', async () => {
-    chrome.declarativeNetRequest.getEnabledRulesets = async () => ['ads', 'trackers', 'annoyances'];
+    chrome.declarativeNetRequest.getEnabledRulesets = async () => [
+      'ads',
+      'trackers',
+      'annoyances',
+      'regional-vi',
+    ];
     const update = vi.fn(async () => undefined);
     chrome.declarativeNetRequest.updateEnabledRulesets = update as never;
 
@@ -52,13 +63,16 @@ describe('getRulesetInfo', () => {
     chrome.declarativeNetRequest.getEnabledRulesets = async () => ['ads'];
     const info = await getRulesetInfo();
 
-    expect(info.map((entry) => entry.id)).toEqual(['ads', 'trackers', 'annoyances']);
+    expect(info.map((entry) => entry.id)).toEqual(['ads', 'trackers', 'annoyances', 'regional-vi']);
     expect(info.find((entry) => entry.id === 'ads')?.enabled).toBe(true);
     expect(info.find((entry) => entry.id === 'trackers')?.enabled).toBe(false);
     for (const entry of info) {
       const source = metadata.find((item) => item.id === entry.id);
       expect(entry.ruleCount).toBe(source?.ruleCount);
       expect(entry.ruleCount).toBeGreaterThan(0);
+      // Attribution travels with the data: it is a licence condition of the upstream lists.
+      expect(entry.source).toBeTruthy();
+      expect(entry.license).toBeTruthy();
     }
   });
 });

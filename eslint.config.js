@@ -52,9 +52,12 @@ export default tseslint.config(
   },
 
   {
-    // page.evaluate() callbacks in the e2e script run inside the browser, not in Node.
-    files: ['e2e/**/*.mjs'],
-    languageOptions: { globals: { ...globals.node, ...globals.browser } },
+    // evaluate() callbacks in these scripts are serialised and run inside the browser or
+    // the extension's service worker, not in Node.
+    files: ['e2e/**/*.mjs', 'scripts/make-store-screenshots.mjs'],
+    languageOptions: {
+      globals: { ...globals.node, ...globals.browser, ...globals.webextensions },
+    },
   },
 
   {
